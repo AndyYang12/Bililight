@@ -1,0 +1,16 @@
+{
+  "name": "bililight",
+  "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
+  "features": {
+    "ghcr.io/devcontainers/features/node:1": { "version": "20" }
+  },
+  "forwardPorts": [8796],
+  "portsAttributes": {
+    "8796": {
+      "label": "biliLight",
+      "visibility": "public",
+      "onAutoForward": "notify"
+    }
+  },
+  "postStartCommand": "nohup node run.mjs 8796 > /tmp/bililight.log 2>&1 &"
+}
