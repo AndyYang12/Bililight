@@ -11,10 +11,21 @@ const ENV = {
 };
 
 const srv = http.createServer(async (req, res) => {
+  res.on('finish', () => {
+    console.log(new Date().toISOString(), req.method, req.url, '->', res.statusCode,
+      'cklen=' + String(req.headers['x-bl-ck'] || '').length);
+  });
   const u = new URL(req.url, `http://${req.headers.host || '127.0.0.1'}`);
   const headers = new Headers();
   for (const k in req.headers) if (k !== 'host' && k !== 'connection') headers.append(k, req.headers[k]);
-  const r = new Request(u.toString(), { method: req.method, headers });
+  const r0 = req;
+  let body;
+  if (req.method !== 'GET' && req.method !== 'HEAD') {
+    const chunks = [];
+    for await (const c of r0) chunks.push(c);
+    body = Buffer.concat(chunks);
+  }
+  const r = new Request(u.toString(), { method: req.method, headers, body });
   try {
     const out = await handle(r, ENV, { waitUntil: p => Promise.resolve(p).catch(() => { }) });
     const h = {};
