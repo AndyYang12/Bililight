@@ -1,19 +1,13 @@
-/* biliLight 自托管运行器（无 wrangler / 无 npm 依赖，Node 18+）
- * 用法（Linux/macOS/安卓Termux）：
- *   BILI_COOKIE='SESSDATA=xxx; bili_jct=yyy' node run.mjs 8796
- * Windows cmd：
- *   set "BILI_COOKIE=SESSDATA=xxx; bili_jct=yyy" && node run.mjs 8796
- * 手机（同 WiFi）打开 http://<这台机器IP>:8796/
- */
 import http from 'node:http';
 import { Readable } from 'node:stream';
-import { handle } from './_worker.js';
+import { handle } from './netlify/functions/bililight.mjs';
 
-const PORT = Number(process.argv[2] || 8796);
+const PORT = Number(process.env.PORT || process.argv[2] || 8796);
 const ENV = {
   BILI_COOKIE: process.env.BILI_COOKIE || '',
   SECRET: process.env.SECRET || '',
   QN_MAX: process.env.QN_MAX || '',
+  PB_OFF: process.env.PB_OFF || '',
 };
 
 const srv = http.createServer(async (req, res) => {
@@ -38,9 +32,9 @@ const srv = http.createServer(async (req, res) => {
     }
   } catch (e) {
     res.writeHead(500, { 'content-type': 'text/plain' });
-    res.end('worker error: ' + (e && e.message));
+    res.end('error: ' + (e && e.message));
   }
 });
 srv.listen(PORT, '0.0.0.0', () => {
-  console.log('biliLight 自托管(流式): http://0.0.0.0:' + PORT + '/  cookie=' + (ENV.BILI_COOKIE ? '已配置' : '未配置(匿名720P)'));
+  console.log('biliLight listening on ' + PORT);
 });
