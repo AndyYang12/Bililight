@@ -1,15 +1,15 @@
-# bililite
+# bililight
 
 <a href="README_zh.md">中文</a>
 <a href="README.md">English</a>
 
 A lightweight third-party web client for Bilibili, designed to provide a simple, browser-based Bilibili experience across different devices including phones, tablets, and smartwatches. Developed by Andy12, initiated by loughead, project start date: December 2025.
 
-> **Project Status: Early Planning Stage.** This repository currently contains only the project vision and architectural draft. There is no complete, runnable product code yet. The features described below are intended goals, not implemented functionality.
+> **Project Status: Base is Complete
 
 ## Project Goals
 
-bililite aims to recreate the core browsing and interaction experience of Bilibili in the browser while keeping pages lightweight, fast-loading, and adaptable to small screens and non-traditional devices such as smartwatches. The project does not host video content; all content comes from Bilibili's official services, and the client serves only as a frontend presentation and interaction layer.
+bililight aims to recreate the core browsing and interaction experience of Bilibili in the browser while keeping pages lightweight, fast-loading, and adaptable to small screens and non-traditional devices such as smartwatches. The project does not host video content; all content comes from Bilibili's official services, and the client serves only as a frontend presentation and interaction layer.
 
 ## Planned Features
 
