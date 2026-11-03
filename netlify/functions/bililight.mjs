@@ -1,3 +1,4 @@
+// © 2025-2026 AndyYang12 & loughead — AGPL-3.0-or-later
 /* md5: js-md5@0.8.3, MIT, Copyright Chen, Yi-Cyuan 2014-2023 */
 (function () {
   'use strict';
