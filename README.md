@@ -38,11 +38,21 @@ bililight aims to recreate the core browsing and interaction experience of Bilib
 - **Compliance**: The project should comply with Bilibili's Terms of Service and applicable laws and regulations, and must not provide content that infringes copyright or bypasses paywalls. The boundaries of the download feature need to be carefully defined.
 - **Current state**: As noted above, the repository does not yet contain a complete implementation. Any attempt to run the project's code should be regarded as development debugging, not as a usable product.
 
+## Donate
+
+If you find this project useful — especially for keeping Bilibili accessible on older browsers and low-end devices — you can buy the maintainer a coffee. Every donation helps keep the project alive.
+
+[![GitHub Sponsors](https://img.shields.io/badge/GitHub%20Sponsors-%23EA4AAA?style=for-the-badge&logo=github-sponsors&logoColor=white)](https://github.com/sponsors/AndyYang12)
+
+> Donations are voluntary and non-refundable. They support maintenance, not a commercial service.
+
 ## Contributing and Feedback
 
-The project is in its early stages. Anyone interested in a lightweight Bilibili client is welcome to offer suggestions or join the discussion. If you wish to contribute code, please first open an Issue to explain your idea so that efforts can be coordinated.
+Anyone interested in a lightweight Bilibili client is welcome to offer suggestions or join the discussion. If you wish to contribute code, please first open an Issue to explain your idea so that efforts can be coordinated.
 
 ## License
 
-This project is licensed under the **MIT License**.
+This project is licensed under the **GNU Affero General Public License v3.0 or later** (AGPL-3.0-or-later).
+
+**Why AGPL?** This project's core value is its single-file full-stack architecture that adapts Bilibili for older browsers and low-end devices. AGPL's network-service-as-distribution clause ensures that if someone deploys a modified version as a public web service, they must offer the source code to their users — keeping improvements in the open. See [LICENSE](./LICENSE) for the full text.
 
