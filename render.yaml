@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: bililight
+    runtime: node
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_VERSION
+        value: "20"
+      - key: PORT
+        sync: false
+      - key: BILI_COOKIE
+        sync: false
+      - key: SECRET
+        sync: false
+      - key: QN_MAX
+        sync: false
+      - key: PB_OFF
+        sync: false
