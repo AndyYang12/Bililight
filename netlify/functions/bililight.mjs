@@ -649,6 +649,33 @@ var RIDS = [
   [160, '生活'], [188, '科技'], [217, '宠物'], [234, '运动'],
 ];
 
+// ---- Node.js in-memory cache fallback (for non-Cloudflare environments like Render) ----
+var MEM_CACHE = new Map();
+var MEM_CACHE_MAX = 500; // max entries
+var MEM_CACHE_TOTAL = 0; // track total bytes for soft eviction
+var MEM_CACHE_MAX_BYTES = 20 * 1024 * 1024; // 20MB soft cap
+function memCacheGet(key) {
+  if (!MEM_CACHE.has(key)) return null;
+  var e = MEM_CACHE.get(key);
+  if (Date.now() - e.age > e.ttl * 1000) { MEM_CACHE.delete(key); MEM_CACHE_TOTAL -= e.size; return null; }
+  MEM_CACHE.delete(key);
+  MEM_CACHE.set(key, e); // promote to recent
+  return e.value;
+}
+function memCacheSet(key, value, ttl) {
+  // evict oldest until room
+  while (MEM_CACHE.size >= MEM_CACHE_MAX || MEM_CACHE_TOTAL >= MEM_CACHE_MAX_BYTES) {
+    var first = MEM_CACHE.keys().next().value;
+    if (first == null) break;
+    var ev = MEM_CACHE.get(first);
+    MEM_CACHE.delete(first);
+    MEM_CACHE_TOTAL -= ev.size;
+  }
+  var size = 0; try { size = String(value).length; } catch (e) { size = 0; }
+  MEM_CACHE.set(key, { value: value, age: Date.now(), ttl: ttl || 60, size: size });
+  MEM_CACHE_TOTAL += size;
+}
+
 
 function num(v) {
   if (typeof v === 'number') return isFinite(v) ? v : 0;
@@ -847,15 +874,19 @@ function hApiM() {
 }
 async function getText(url, noCache, kind, hd) {
   var hit = null;
+  var ttl = kind === 'xml' ? CFG.TTL_DM : CFG.TTL_API;
   if (!noCache && typeof caches !== 'undefined' && caches.default) {
     try {
       hit = await caches.default.match(new Request(url, { headers: hApi() }));
       if (hit) {
         var age = num(hit.headers.get('x-bl-age'));
-        var ttl = kind === 'xml' ? CFG.TTL_DM : CFG.TTL_API;
         if (age && Date.now() - age < ttl * 1000) return await hit.text();
       }
     } catch (e) { hit = null; }
+  } else if (!noCache && !hd) {
+    // Node.js in-memory cache fallback
+    var mhit = memCacheGet(url);
+    if (mhit != null) return mhit;
   }
   var r = await fetch(url, { headers: hd || hApi() });
   var text = await r.text();
@@ -866,12 +897,16 @@ async function getText(url, noCache, kind, hd) {
   }
 
   var banned = text.indexOf('"code":-352"') >= 0 || text.indexOf('"code":-412"') >= 0;
-  if (!banned && !noCache && typeof caches !== 'undefined' && caches.default && r.status === 200 && text) {
-    try {
-      await caches.default.put(new Request(url, { headers: hApi() }), new Response(text, {
-        headers: { 'content-type': kind === 'xml' ? 'text/xml; charset=utf-8' : 'application/json; charset=utf-8', 'x-bl-age': String(Date.now()) },
-      }));
-    } catch (e) { }
+  if (!banned && !noCache && r.status === 200 && text) {
+    if (typeof caches !== 'undefined' && caches.default) {
+      try {
+        await caches.default.put(new Request(url, { headers: hApi() }), new Response(text, {
+          headers: { 'content-type': kind === 'xml' ? 'text/xml; charset=utf-8' : 'application/json; charset=utf-8', 'x-bl-age': String(Date.now()) },
+        }));
+      } catch (e) { }
+    } else if (!hd) {
+      memCacheSet(url, text, ttl);
+    }
   }
   return text;
 }
