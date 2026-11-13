@@ -56,3 +56,12 @@ This project is licensed under the **GNU Affero General Public License v3.0 or l
 
 **Why AGPL?** This project's core value is its single-file full-stack architecture that adapts Bilibili for older browsers and low-end devices. AGPL's network-service-as-distribution clause ensures that if someone deploys a modified version as a public web service, they must offer the source code to their users — keeping improvements in the open. See [LICENSE](./LICENSE) for the full text.
 
+
+## Acknowledgements
+
+This branch keeps the full-featured build for platforms that allow server-side proxying (Render, Netlify, or a self-hosted VPS). It is **not** the build intended for shared Plesk hosting.
+
+- [SocialSisterYi/bilibili-API-collect](https://github.com/SocialSisterYi/bilibili-API-collect) — community documentation of Bilibili's web APIs, WBI signing, and cookie conventions.
+- PeanutDL — fallback source of direct MP4 URLs when Bilibili's `playurl` API refuses a request.
+- Bilibili — for the public web APIs this client consumes.
+- Everyone who reported issues and tested the client on low-end devices.

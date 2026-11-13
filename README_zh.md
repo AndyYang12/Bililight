@@ -55,3 +55,12 @@ bililight 希望在浏览器中还原 B 站的核心浏览与互动体验，同�
 本项目采用 **GNU Affero General Public License v3.0 或更高版本**（AGPL-3.0-or-later）。
 
 **为什么选 AGPL？** 这个项目的核心价值在于它的单文件全栈架构 —— 让 B 站在旧浏览器和低配设备上继续可用。AGPL 的"网络服务视为分发"条款确保：如果有人把修改版作为公开网页服务部署，必须向用户提供源码，让改进保持开放。完整协议见 [LICENSE](./LICENSE)。
+
+## 鸣谢
+
+本分支保留完整功能版本，面向允许服务端代理的平台（Render、Netlify 或自建 VPS）。**不适用于共享型 Plesk 主机**。
+
+- [SocialSisterYi/bilibili-API-collect](https://github.com/SocialSisterYi/bilibili-API-collect) —— B 站 Web API、WBI 签名与 Cookie 约定的社区文档。
+- PeanutDL —— 当 B 站 `playurl` 接口拒绝请求时，作为直链 MP4 的兜底来源。
+- Bilibili —— 本项目所调用的公开 Web API 提供方。
+- 所有反馈问题、在低配设备上参与测试的人。
