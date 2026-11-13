@@ -48,7 +48,7 @@ bililight 希望在浏览器中还原 B 站的核心浏览与互动体验，同�
 - `/play` —— 以 JSON 返回直连 CDN 签名地址和弹幕 XML。
 - 页面发送 `Referer: none`（`<meta name="referrer" content="no-referrer">`），图片与视频由浏览器直接向 B 站 CDN 请求，服务器不中转任何内容。
 
-Plesk 中：**Node.js** → 应用根目录选择包含 `package.json` 的文件夹（HelioHost 要求放在**主目录，不是 `httpdocs`**），启动文件 `run.mjs`，应用模式选 `Development`，Node.js 版本 18 或更高；执行 `npm install` 后重启。可选环境变量：`BILI_COOKIE`、`QN_MAX`；Plesk 提供 `PORT` 时用 `PORT`，否则默认监听 3000。
+Plesk 中：**Node.js** → 应用根目录选择包含 `package.json` 的文件夹（HelioHost 要求放在**主目录，不是 `httpdocs`**），启动文件填 `app.cjs`（CommonJS 桥接入口，因为 Plesk 用 `require()` 加载启动文件，Node 22 以下无法加载 ES Module），应用模式选 `Development`，Node.js 版本 18 或更高；执行 `npm install` 后重启。可选环境变量：`BILI_COOKIE`、`QN_MAX`；设置了 `PORT` 就用 `PORT`，否则默认监听 3000。
 
 本地运行：
 

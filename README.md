@@ -48,7 +48,7 @@ This branch is the shared-hosting build and contains **no media or image proxy**
 - `/play` — returns a direct, signed CDN URL plus the danmaku XML as JSON.
 - The page sends `Referer: none` (`<meta name="referrer" content="no-referrer">`), so the browser loads images and video directly from Bilibili's CDN. Nothing is relayed through the server.
 
-In Plesk: **Node.js** → Application Root = the folder containing `package.json` (HelioHost: your home directory, **not** `httpdocs`), Application Startup File `run.mjs`, Application Mode `Development`, Node.js 18 or newer. Then `npm install` and restart. Optional environment variables: `BILI_COOKIE`, `QN_MAX`. The app listens on `PORT` if Plesk sets it, otherwise on port 3000.
+In Plesk: **Node.js** → Application Root = the folder containing `package.json` (HelioHost: your home directory, **not** `httpdocs`), Application Startup File `app.cjs` (a CommonJS bridge, because Plesk loads the startup file with `require()` and cannot load ES modules on Node < 22), Application Mode `Development`, Node.js 18 or newer. Then `npm install` and restart. Optional environment variables: `BILI_COOKIE`, `QN_MAX`. The app listens on `PORT` if it is set, otherwise on port 3000.
 
 Local run:
 
