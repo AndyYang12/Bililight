@@ -711,14 +711,6 @@ function pic(u, size) {
   if (path.indexOf('@') < 0 && !/\.gif$/i.test(path)) path += '@' + (size || '480w_300h_1c.webp');
   return 'https://' + host + '/' + path;
 }
-function imgProxyable(hostKey, path) {
-  var h = String(hostKey || '');
-  if (!/^(i[0-9]|avatar)$/.test(h)) return null;
-  if (path.indexOf('..') >= 0 || path.indexOf('//') === 0) return null;
-
-  if (!/^\/bfs\/[A-Za-z0-9_.\/-]+\.(jpg|jpeg|png|webp|gif)(@[0-9a-zA-Z._-]+)?$/i.test(path)) return null;
-  return 'https://' + h + '.hdslb.com' + path;
-}
 function ago(ts) {
   var s = Math.max(0, Math.floor(Date.now() / 1000) - num(ts));
   if (!ts) return '';
@@ -811,14 +803,6 @@ function hApi() {
   if (ck.length) h.cookie = ck.join('; ');
   return h;
 }
-function hImg() {
-  return {
-    'user-agent': CFG.UA_DESK, referer: CFG.REF,
-    accept: 'image/webp,image/apng,image/*,*/*;q=0.8', 'accept-language': 'zh-CN,zh;q=0.9',
-    'sec-fetch-dest': 'image', 'sec-fetch-mode': 'no-cors', 'sec-fetch-site': 'cross-site',
-  };
-}
-
 async function ensureBuvid(force) {
   var nowMs = Date.now();
   if (!force && DEV.b3 && nowMs - DEV.at < 3600 * 1000) { await devTicket(false); return DEV.b3; }
@@ -1149,12 +1133,6 @@ function peanutOne(pg) {
     pages: [{ cid: num(info.Cid), part: strip(info.Titlep || info.Title, 80), dur: dur(sec), idx: 1 }],
   };
 }
-function peanutQn(desc) {
-  var m = String(desc || '').match(/(\d+)\s*[Pp]/);
-  var q = m ? num(m[1]) : 720;
-  var map = { 2160: 120, 1440: 116, 1080: 80, 720: 64, 480: 32, 360: 16, 240: 6, 120: 6 };
-  return map[q] || 64;
-}
 
 
 var APPKEY = '1d8b6e7d45233436', APPSEC = 'c2ed53a74eeefe3cf99fbd01d8c9c375';
@@ -1255,22 +1233,14 @@ async function apiCall(name, params, forceSign, envP) {
 }
 
 
-async function pbPlayData(pg, cid, qn, env) {
-  var mpg = pg.mp4 || {}, mi = (pg.info || {}).Cid ? num((pg.info || {}).Cid) : (cid || 0);
-  var pq = peanutQn(mpg.info_description);
-  var u = (mpg.backup_url && mpg.backup_url.length ? [mpg.player_url].concat(mpg.backup_url) : [mpg.player_url])
-    .filter(function (x) { return typeof x === 'string' && /^https?:/i.test(x); });
-  var pref = /upos-zj|moyi|bcing|upzjmoe|upzj1mimoss|mirror01|mirrorcos/;
-  u.sort(function (a, b) { return (pref.test(b) ? 1 : 0) - (pref.test(a) ? 1 : 0); });
-  return {
-    cid: mi, quality: pq, qname: strip(mpg.info_description, 20) + ' · Peanut',
-    sizeMB: Math.round(num(mpg.info_size) / 1048576 * 10) / 10,
-    sec: Math.round(num(mpg.info_length) / 1000),
-    src: u.length ? await mediaUrl(u, env, UCK || CK) : '',
-    pbPick: 'mp4.player_url',
-    fallbacks: u.length, formats: [{ qn: pq, name: strip(mpg.info_description, 20) + ' (Peanut)', vip: 0 }],
-    video_codecs: [], need: pq < qn ? 1 : 0,
-  };
+async function dmText(cid) {
+  var id = num(cid);
+  if (!id) return '';
+  try {
+    var txt = await getText('https://comment.bilibili.com/' + id + '.xml', false, 'xml');
+    if (!txt || txt.indexOf('<d') < 0) return '';
+    return txt.length > 1500000 ? txt.slice(0, 1500000) : txt;
+  } catch (e) { return ''; }
 }
 
 
@@ -1289,19 +1259,12 @@ async function resolvePlay(q, env) {
     if (!v.data.pages.length) return { code: -2, message: '这个视频没有可播的分 P' };
   }
   var p = await apiCall('playurl', { bvid: bv, aid: aid, cid: cid, qn: qn });
-  var pbTry = null;
-  if (p.code !== 0) pbTry = await peanutGet(bv, aid, env);
-  if (p.code !== 0 && pbTry) return { code: 0, data: await pbPlayData(pbTry, cid, qn, env) };
   if (p.code !== 0) return p;
   var d = p.data || {};
   var seg = (d.durl || [])[0];
   var urls = seg ? [seg.url].concat(seg.backup_url || []) : [];
   urls = urls.filter(function (u) { return typeof u === 'string' && /^https?:/i.test(u); });
-  if (!urls.length) {
-    if (!pbTry) pbTry = await peanutGet(bv, aid, env);
-    if (pbTry) return { code: 0, data: await pbPlayData(pbTry, cid, qn, env) };
-    return { code: -3, message: '没有可直连的 mp4（付费/会员/版权限制）' };
-  }
+  if (!urls.length) return { code: -3, message: '没有可直连的 mp4（付费/会员/版权限制）' };
   var fmts = (d.support_formats || []).filter(function (f) { return num(f.quality) > 0 && num(f.quality) <= max; })
     .map(function (f) {
       return {
@@ -1316,7 +1279,7 @@ async function resolvePlay(q, env) {
       cid: num(d.cid) || cid, quality: num(d.quality), qname: CFG.QN_NAME[num(d.quality)] || '',
       sizeMB: Math.round(num(seg.size) / 1048576 * 10) / 10, sec: Math.round(num(seg.length || d.timelength) / 1000),
 
-      src: await mediaUrl(urls, env, UCK || CK),
+      src: urls[0], dm: await dmText(cid),
       fallbacks: urls.length, formats: fmts,
       video_codecs: (d.video_codecs || []).map(function (c) { return c.width + 'x' + c.height + ' ' + c.codecs; }).slice(0, 4),
       need: num(d.quality) < qn ? 1 : 0,
@@ -1325,105 +1288,12 @@ async function resolvePlay(q, env) {
 }
 
 
-async function hmacKey(env) {
-  var secret = (env && env.SECRET) || 'bililight-v1';
-  return await crypto.subtle.importKey('raw', new TextEncoder().encode(secret),
-    { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
-}
 function b64(s) { return btoa(unescape(encodeURIComponent(s))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''); }
 function unb64(s) {
   var t = String(s).replace(/-/g, '+').replace(/_/g, '/');
   while (t.length % 4) t += '=';
   return decodeURIComponent(escape(atob(t)));
 }
-async function sigOf(msg, env) {
-  var b = await crypto.subtle.sign('HMAC', await hmacKey(env), new TextEncoder().encode(msg));
-  return b64(String.fromCharCode.apply(null, new Uint8Array(b)));
-}
-async function mediaUrl(urls, env, ck) {
-  var exp = Math.floor(Date.now() / 1000) + CFG.TTL_MEDIA;
-  var body = b64(JSON.stringify(urls.slice(0, 4)));
-  var c = ck ? b64(String(ck)) : '';
-  return '/m?e=' + exp + '&u=' + encodeURIComponent(body) + '&c=' + encodeURIComponent(c) + '&s=' + encodeURIComponent(await sigOf(exp + '|' + body + '|' + c, env));
-}
-async function mediaRead(params, env) {
-  var exp = num(params.get('e')), body = params.get('u') || '', s = params.get('s') || '', c = params.get('c') || '';
-  if (!exp || !body) return null;
-  if (exp < Math.floor(Date.now() / 1000)) return null;
-  if (s !== await sigOf(exp + '|' + body + '|' + c, env)) return null;
-  var urls;
-  try { urls = JSON.parse(unb64(body)); } catch (e) { return null; }
-  if (!Array.isArray(urls) || !urls.length) return null;
-  for (var i = 0; i < urls.length; i++) {
-    var h;
-    try { h = new URL(urls[i]).hostname; } catch (e) { return null; }
-    if (!/(^|\.)(bilivideo\.(com|cn)|upbilibres\.clpyun\.com|mcdnbta\.com|bilitile\.com|uphoscxacp\.com|bilivideo\.moe|bas.bilibili\.com|hdslb\.com)$/i.test(h)) return null;
-  }
-  var ck = '';
-  try { ck = c ? unb64(c) : ''; } catch (e) { ck = ''; }
-  return { urls: urls, ck: /^[A-Za-z0-9%=;:._\-&+ ]{1,3000}$/.test(ck) ? ck : '' };
-}
-
-
-async function serveMedia(params, request, env) {
-  var m = await mediaRead(params, env);
-  if (!m) return new Response('bad token', { status: 403, headers: { 'content-type': 'text/plain' } });
-  var urls = m.urls;
-  var hdrs = { 'user-agent': CFG.UA_DESK, referer: CFG.REF, 'accept-encoding': 'identity' };
-  var useCk = m.ck || UCK || CK;
-  if (useCk) hdrs.cookie = useCk;
-  var rng = request.headers.get('range');
-  if (rng) hdrs.range = rng;
-  var r = null, err = '';
-  for (var i = 0; i < urls.length && !r; i++) {
-    try { r = await fetch(urls[i], { headers: hdrs, redirect: 'follow' }); }
-    catch (e) { err = String(e && e.message || e).slice(0, 60); }
-    if (r && r.status >= 500) { var bad = r; r = null; err = 'CDN ' + bad.status; }
-  }
-  if (!r) return new Response('media fetch failed: ' + err, { status: 502, headers: { 'content-type': 'text/plain' } });
-  var h = new Headers();
-  h.set('content-type', r.headers.get('content-type') || 'video/mp4');
-  h.set('accept-ranges', 'bytes');
-  h.set('cache-control', 'private, max-age=0, must-revalidate');
-  h.set('access-control-allow-origin', '*');
-  h.set('x-content-type-options', 'nosniff');
-  ['content-length', 'content-range', 'last-modified', 'etag'].forEach(function (k) {
-    var v = r.headers.get(k); if (v) h.set(k, v);
-  });
-  return new Response(r.body, { status: r.status, headers: h });
-}
-
-async function serveImg(params, env) {
-  var u = imgProxyable(params.get('h'), params.get('f'));
-  if (!u) return new Response('bad', { status: 400, headers: { 'content-type': 'text/plain' } });
-  try {
-    var r = await fetch(u, { headers: hImg() });
-    if (!r.ok) return new Response('', { status: 404 });
-    var h = new Headers();
-    h.set('content-type', r.headers.get('content-type') || 'image/webp');
-    h.set('cache-control', 'public, max-age=86400, immutable');
-    h.set('access-control-allow-origin', '*');
-    h.set('x-content-type-options', 'nosniff');
-    return new Response(r.body, { status: 200, headers: h });
-  } catch (e) { return new Response('', { status: 502 }); }
-}
-
-
-async function serveDm(params) {
-  var cid = num(params.get('cid'));
-  if (!cid) return new Response('<?xml version="1.0" encoding="UTF-8"?><i></i>', { status: 400, headers: { 'content-type': 'text/xml; charset=utf-8' } });
-  var txt;
-  try { txt = await getText('https://comment.bilibili.com/' + cid + '.xml', false, 'xml'); }
-  catch (e) { txt = '<?xml version="1.0" encoding="UTF-8"?><i></i>'; }
-  if (!/^\s*(\u003c\u003fxml|<\?xml|<i>)/.test(txt) && txt.indexOf('<i>') < 0) {
-    txt = '<?xml version="1.0" encoding="UTF-8"?><i></i>';   
-  }
-  return new Response(txt, {
-    headers: { 'content-type': 'text/xml; charset=utf-8', 'cache-control': 'public, max-age=' + CFG.TTL_DM, 'access-control-allow-origin': '*' },
-  });
-}
-
-
 function cors() {
   return {
     'access-control-allow-origin': '*',
@@ -1435,6 +1305,16 @@ function cors() {
 function jsonRes(o, status, extra) {
   var h = Object.assign({ 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store', 'x-content-type-options': 'nosniff' }, cors(), extra || {});
   return new Response(JSON.stringify(o), { status: status || 200, headers: h });
+}
+
+var PAGE_FIXED = null;
+function pageHtml() {
+  if (PAGE_FIXED !== null) return PAGE_FIXED;
+  PAGE_FIXED = PAGE_HTML
+    .replace('content="no-referrer-when-downgrade"', 'content="no-referrer"')
+    .replace("get('/dm?cid=' + encodeURIComponent(cid), function (err, txt) {",
+      "(function (cb) { cb(0, (VID.seg && VID.seg.dm) || ''); })(function (err, txt) {");
+  return PAGE_FIXED;
 }
 
 async function handle(request, env, ctx) {
@@ -1451,14 +1331,14 @@ async function handle(request, env, ctx) {
 
   try {
     if (p === '/' || p === '/index.html') {
-      return new Response(PAGE_HTML, {
+      return new Response(pageHtml(), {
         headers: {
           'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-cache',
-          'x-content-type-options': 'nosniff', 'referrer-policy': 'no-referrer-when-downgrade',
+          'x-content-type-options': 'nosniff', 'referrer-policy': 'no-referrer',
         },
       });
     }
-    if (p === '/robots.txt') return new Response('User-agent: *\nDisallow: /api\nDisallow: /m\n', { headers: { 'content-type': 'text/plain' } });
+    if (p === '/robots.txt') return new Response('User-agent: *\nDisallow: /api\n', { headers: { 'content-type': 'text/plain' } });
     if (p === '/health') return jsonRes({
       code: 0, data: {
         app: 'biliLight', ver: CFG.VER, md5: typeof md5hex === 'function' ? 1 : 0,
@@ -1478,9 +1358,6 @@ async function handle(request, env, ctx) {
       return jsonRes(r, 200);
     }
     if (p === '/play') return jsonRes(await resolvePlay({ bvid: params.get('bvid'), aid: params.get('aid'), cid: params.get('cid'), qn: params.get('qn') }, env), 200);
-    if (p === '/dm') return await serveDm(params);
-    if (p === '/m') return await serveMedia(params, request, env);
-    if (p === '/img') return await serveImg(params, env);
     if (p === '/qr') {
       var jg = await getJson('https://passport.bilibili.com/x/passport-login/web/qrcode/generate', true);
       var dg = (jg && jg.data) || {};
@@ -1575,11 +1452,10 @@ export { handle };
 
 
 export const config = {
-  path: ['/', '/api', '/play', '/dm', '/m', '/img', '/qr', '/qrpoll', '/act', '/health', '/meta', '/robots.txt', '/index.html'],
+  path: ['/', '/api', '/play', '/qr', '/qrpoll', '/act', '/health', '/meta', '/robots.txt', '/index.html'],
 };
 var NETLIFY_ENV = {
   BILI_COOKIE: (typeof process !== 'undefined' && process.env.BILI_COOKIE) || '',
-  SECRET: (typeof process !== 'undefined' && process.env.SECRET) || '',
   QN_MAX: (typeof process !== 'undefined' && process.env.QN_MAX) || '',
   PB_OFF: (typeof process !== 'undefined' && process.env.PB_OFF) || '',
 };

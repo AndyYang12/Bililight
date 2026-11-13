@@ -11,8 +11,6 @@ services:
         sync: false
       - key: BILI_COOKIE
         sync: false
-      - key: SECRET
-        sync: false
       - key: QN_MAX
         sync: false
       - key: PB_OFF

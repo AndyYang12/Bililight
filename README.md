@@ -27,7 +27,7 @@ bililight aims to recreate the core browsing and interaction experience of Bilib
 ## Technical Direction (Draft)
 
 - **Frontend**: Plan to use a modern frontend framework to build a responsive interface, with emphasis on layout and touch interaction optimization for small screens.
-- **Backend / Proxy layer**: Use Node.js to provide a lightweight API proxy that forwards requests to Bilibili's public interfaces and handles necessary signature calculations.
+- **Backend / API layer**: Use Node.js as a lightweight backend-for-frontend that calls Bilibili's public interfaces and handles the necessary signing. It does not relay media or arbitrary URLs.
 - **Data storage**: Non-sensitive cache and configuration data may use Cloudflare's free storage services.
 - **Deployment**: The goal is to run basic browsing functionality on low-spec servers (e.g., a 1-core instance), but login and user-data-related features require additional resources and security considerations.
 
@@ -37,6 +37,26 @@ bililight aims to recreate the core browsing and interaction experience of Bilib
 - **Interface stability**: Bilibili's Web APIs employ signature mechanisms (such as WBI signing) and risk-control policies, and interfaces may change at any time. The project requires ongoing maintenance to keep up with these changes.
 - **Compliance**: The project should comply with Bilibili's Terms of Service and applicable laws and regulations, and must not provide content that infringes copyright or bypasses paywalls. The boundaries of the download feature need to be carefully defined.
 - **Current state**: As noted above, the repository does not yet contain a complete implementation. Any attempt to run the project's code should be regarded as development debugging, not as a usable product.
+
+## Deployment
+
+### Johnny (HelioHost, Plesk Node.js)
+
+This branch is the shared-hosting build and contains **no media or image proxy**:
+
+- `/api` — JSON calls to Bilibili's public API.
+- `/play` — returns a direct, signed CDN URL plus the danmaku XML as JSON.
+- The page sends `Referer: none` (`<meta name="referrer" content="no-referrer">`), so the browser loads images and video directly from Bilibili's CDN. Nothing is relayed through the server.
+
+In Plesk: **Node.js** → Application Root `/`, Application Startup File `run.mjs`, then `npm install` and restart. Optional environment variables: `BILI_COOKIE`, `QN_MAX`. `PORT` is supplied by Plesk.
+
+Local run:
+
+```bash
+npm start            # or: node run.mjs 8796
+```
+
+For Render / Netlify, use the `render/netlify-only` branch, which keeps the full-featured build.
 
 ## Donate
 

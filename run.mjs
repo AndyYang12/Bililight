@@ -2,10 +2,9 @@ import http from 'node:http';
 import { Readable } from 'node:stream';
 import { handle } from './netlify/functions/bililight.mjs';
 
-const PORT = Number(process.env.PORT || process.argv[2] || 8796);
+const PORT = process.env.PORT || process.argv[2] || 8796;
 const ENV = {
   BILI_COOKIE: process.env.BILI_COOKIE || '',
-  SECRET: process.env.SECRET || '',
   QN_MAX: process.env.QN_MAX || '',
   PB_OFF: process.env.PB_OFF || '',
 };
@@ -46,6 +45,9 @@ const srv = http.createServer(async (req, res) => {
     res.end('error: ' + (e && e.message));
   }
 });
-srv.listen(PORT, '0.0.0.0', () => {
+const listenArgs = [String(PORT)];
+if (/^\d+$/.test(String(PORT))) listenArgs.push('0.0.0.0');
+listenArgs.push(() => {
   console.log('biliLight listening on ' + PORT);
 });
+srv.listen(...listenArgs);
