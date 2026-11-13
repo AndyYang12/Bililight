@@ -1,6 +1,6 @@
 import http from 'node:http';
 import { Readable } from 'node:stream';
-import { handle } from './netlify/functions/bililight.mjs';
+import { handle } from './server/app.mjs';
 
 const PORT = process.env.PORT || process.argv[2] || 8796;
 const ENV = {

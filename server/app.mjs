@@ -1450,26 +1450,3 @@ async function handle(request, env, ctx) {
 }
 export { handle };
 
-
-export const config = {
-  path: ['/', '/api', '/play', '/qr', '/qrpoll', '/act', '/health', '/meta', '/robots.txt', '/index.html'],
-};
-var NETLIFY_ENV = {
-  BILI_COOKIE: (typeof process !== 'undefined' && process.env.BILI_COOKIE) || '',
-  QN_MAX: (typeof process !== 'undefined' && process.env.QN_MAX) || '',
-  PB_OFF: (typeof process !== 'undefined' && process.env.PB_OFF) || '',
-};
-export default async function (request, context) {
-
-  if (!request || typeof request.url !== 'string') {
-    if (request && request.stage === 'warmUp') return;
-    return new Response('ok', { status: 200 });
-  }
-  var c = { waitUntil: function (p) {
-    p = Promise.resolve(p).catch(function () { });
-    try { if (context && context.waitUntil) context.waitUntil(p); } catch (e) { }
-    return p;
-  } };
-  return handle(request, NETLIFY_ENV, c);
-};
-
