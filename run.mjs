@@ -2,7 +2,7 @@ import http from 'node:http';
 import { Readable } from 'node:stream';
 import { handle } from './server/app.mjs';
 
-const PORT = process.env.PORT || process.argv[2] || 8796;
+const PORT = process.env.PORT || process.argv[2] || 3000;
 const ENV = {
   BILI_COOKIE: process.env.BILI_COOKIE || '',
   QN_MAX: process.env.QN_MAX || '',
