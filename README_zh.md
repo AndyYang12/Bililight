@@ -75,3 +75,8 @@ Render / Netlify 请使用 `render/netlify-only` 分支，那里保留完整功�
 本项目采用 **GNU Affero General Public License v3.0 或更高版本**（AGPL-3.0-or-later）。
 
 **为什么选 AGPL？** 这个项目的核心价值在于它的单文件全栈架构 —— 让 B 站在旧浏览器和低配设备上继续可用。AGPL 的"网络服务视为分发"条款确保：如果有人把修改版作为公开网页服务部署，必须向用户提供源码，让改进保持开放。完整协议见 [LICENSE](./LICENSE)。
+
+## 关于我们
+Loughead是b站著名的数码区up主，主要研究旧手机以及旧版软件参与老豆荚应用（2012rs.oldpods.cn)建设，对老豆荚的旧版软件收集和宣传做了巨大贡献，b站网址【Loughead的个人空间-哔哩哔哩】 https://b23.tv/v33zStR
+
+AndyYang12是此网站重要的开发者，也是老豆荚应用的成员之一，此网站的主要功能均由他开发，AndyYang12的b站网址【AndyYang12的个人空间-哔哩哔哩】 https://b23.tv/TXR1KrG
