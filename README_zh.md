@@ -50,6 +50,24 @@ bililight 希望在浏览器中还原 B 站的核心浏览与互动体验，同�
 
 Plesk 中：**Node.js** → 应用根目录选择包含 `package.json` 的文件夹（HelioHost 要求放在**主目录，不是 `httpdocs`**），启动文件填 `app.cjs`（CommonJS 桥接入口，因为 Plesk 用 `require()` 加载启动文件，Node 22 以下无法加载 ES Module），应用模式选 `Development`，Node.js 版本 18 或更高；执行 `npm install` 后重启。可选环境变量：`BILI_COOKIE`、`QN_MAX`；设置了 `PORT` 就用 `PORT`，否则默认监听 3000。
 
+### 极简版 `/lite`（面向老内核）
+
+`/lite` 是**服务端渲染**的 HTML 3.2 页面：只用表格、超链接和表单，没有 CSS、没有 JavaScript，不依赖 `fetch`/Promise/flexbox。现代浏览器访问 `/` 仍是完整版；识别到老浏览器（IE、NetSurf、Lynx、w3m、Chrome < 49、Firefox < 45、Safari < 10 等）时自动转到 `/lite`，也可以手动访问。
+
+| 路径 | 作用 |
+|---|---|
+| `/lite` | 热门列表 + 搜索框 |
+| `/lite/rank` | 排行榜 |
+| `/lite/search?keyword=xxx&page=N` | 搜索结果 |
+| `/lite/v?bvid=BV...` | 视频信息、简介、分 P 列表 |
+| `/lite/play?bvid=...&cid=...&qn=64` | 直连播放地址（可点开，也可复制到 VLC/PotPlayer） |
+
+物理限制（不是代码能绕过的）：
+
+- **HTTPS 握手**：IE4/IE5 最高只支持 SSL 3.0/TLS 1.0，而现代主机的 HTTPS 只提供 TLS 1.2+。若域名强制 HTTPS，这类浏览器会在传输层就失败；能连上的前提是站点同时提供可用的旧协议或纯 HTTP。
+- **图片**：B 站图片 CDN 对带 `Referer` 的请求返回 403，而老浏览器不支持 `no-referrer`。极简版因此**不输出图片**，避免满屏破图。
+- **视频**：极简版只给直连签名地址。浏览器能播就播，不能播就用外部播放器；地址有时效，过期回页面重新获取。
+
 本地运行：
 
 ```bash

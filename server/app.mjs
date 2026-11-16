@@ -1,3 +1,4 @@
+import { renderLite, wantsLite } from './lite.mjs';
 // © 2025-2026 AndyYang12 & loughead — AGPL-3.0-or-later
 /* md5: js-md5@0.8.3, MIT, Copyright Chen, Yi-Cyuan 2014-2023 */
 (function () {
@@ -1330,6 +1331,15 @@ async function handle(request, env, ctx) {
   if (request.method !== 'GET' && request.method !== 'HEAD' && !(request.method === 'POST' && p === '/act')) return jsonRes({ code: -1, message: '只支持 GET' }, 405);
 
   try {
+    if (p === '/lite' || p.indexOf('/lite/') === 0 || ((p === '/' || p === '/index.html') && wantsLite(request))) {
+      var liteHtml = await renderLite(p === '/' || p === '/index.html' ? '/lite' : p, params, env, apiCall, resolvePlay);
+      return new Response(liteHtml, {
+        headers: {
+          'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-cache',
+          'x-content-type-options': 'nosniff',
+        },
+      });
+    }
     if (p === '/' || p === '/index.html') {
       return new Response(pageHtml(), {
         headers: {

@@ -50,6 +50,24 @@ This branch is the shared-hosting build and contains **no media or image proxy**
 
 In Plesk: **Node.js** → Application Root = the folder containing `package.json` (HelioHost: your home directory, **not** `httpdocs`), Application Startup File `app.cjs` (a CommonJS bridge, because Plesk loads the startup file with `require()` and cannot load ES modules on Node < 22), Application Mode `Development`, Node.js 18 or newer. Then `npm install` and restart. Optional environment variables: `BILI_COOKIE`, `QN_MAX`. The app listens on `PORT` if it is set, otherwise on port 3000.
 
+### Legacy mode `/lite`
+
+`/lite` is server-rendered HTML 3.2: tables, links and forms only — no CSS, no JavaScript, no `fetch`/Promise/flexbox. Modern browsers still get the full app at `/`; browsers identified as old (IE, NetSurf, Lynx, w3m, Chrome < 49, Firefox < 45, Safari < 10) are sent to `/lite` automatically.
+
+| Path | Purpose |
+|---|---|
+| `/lite` | Popular list + search box |
+| `/lite/rank` | Ranking |
+| `/lite/search?keyword=xxx&page=N` | Search results |
+| `/lite/v?bvid=BV...` | Video details, description, parts |
+| `/lite/play?bvid=...&cid=...&qn=64` | Direct playback URL (open it or paste into VLC/PotPlayer) |
+
+Hard limits that no code can bypass:
+
+- **TLS**: IE4/IE5 support at most SSL 3.0 / TLS 1.0, while modern hosts only offer TLS 1.2+. If the domain forces HTTPS, those browsers fail at the transport layer.
+- **Images**: Bilibili's image CDN returns 403 when a `Referer` is present, and old browsers cannot send `no-referrer`. Legacy mode therefore omits images.
+- **Video**: legacy mode only exposes the signed direct URL; playback depends on the browser, otherwise use an external player. URLs expire.
+
 Local run:
 
 ```bash
